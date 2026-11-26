@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>quant-teacher-lib 範例</title>
+<link rel="stylesheet" href="../teacher.css">
+<style>body { margin: 0; } main { padding: 12px; max-width: 760px; margin: auto; } h2 { font-size: 1.1em; }</style>
+</head>
+<body class="tl">
+<main>
+  <p>數字全是舉例，只為了示範畫法。</p>
+  <h2>一、數學式卡</h2><div id="cards"></div>
+  <h2>二、五支股票一步一步，含翻號</h2><div id="steps"></div>
+  <h2>三、rank 和 scale 的滑桿</h2><div id="slider"></div>
+  <h2>四、K 線每根縮成一樣高</h2><div id="candles"></div>
+</main>
+<script src="../teacher.js"></script>
+<script>
+  var names = ['甲', '乙', '丙', '丁', '戊'];
+  var x = [3, -1, 4, 1.5, -2];
+  var f = function (xs) { return xs.map(function (v) { return Teacher.fmt(v).replace('−', '-'); }).join(',\\ '); };
+
+  Teacher.cards('#cards', [{
+    title: '名次倒過來再減平均',
+    bet: '數字越小的越值得買，這裡只是示範一張卡長什麼樣子。',
+    formula: 'w=N\\big(1-\\operatorname{rank}(x)\\big)',
+    parts: [
+      { name: 'rank', tex: '\\operatorname{rank}(x)=\\dfrac{\\text{從 0 數起的名次}}{\\text{家數}-1}', text: '五支互相比，最小 0、最大 1。' },
+      { name: '1 −', tex: '1-\\operatorname{rank}(x)', text: '名次倒過來，這一步翻號。' },
+      { name: 'N', tex: 'N(x)=x-\\overline{x}', text: '減掉平均，總和變 0。' }
+    ],
+    subs: [
+      { tex: 'x=(' + f(x) + ')', text: '舉例。' },
+      { tex: '\\operatorname{rank}(x)=(' + f(Teacher.rank(x)) + ')', text: '丙最大排 1，戊最小排 0。' },
+      { tex: 'w=(' + f(Teacher.chain(x, ['rank', 'oneMinus', 'neutralize'])) + ')', text: '戊變成買最多，丙變成放空最多。' }
+    ],
+    meaning: '示範用：把原本的大小關係反過來，再讓買進和放空一樣多。',
+    weakness: '示範用的式子，沒有經濟理由，不能拿去用。'
+  }]);
+
+  Teacher.steps('#steps', {
+    names: names,
+    segments: [{
+      title: '示範',
+      full: ['w=N\\big(1-\\operatorname{rank}(x)\\big)'],
+      steps: [
+        { tex: 'x', hl: 'x', values: x, text: '五支的原始數字，舉例。' },
+        { tex: '\\operatorname{rank}(x)', hl: '\\operatorname{rank}(x)', op: 'rank', text: '五支互相比，最小 0、最大 1。' },
+        { tex: '1-\\operatorname{rank}(x)', hl: '1-\\operatorname{rank}(x)', op: 'oneMinus', flip: true, text: '用 1 去減，名次倒過來：原本最高的丙變最低。' },
+        { tex: 'N(\\cdot)', hl: 'N\\big(1-\\operatorname{rank}(x)\\big)', op: 'neutralize', text: '減掉平均：正的買、負的放空，離 0 越遠錢越多。' },
+        { tex: '-w', op: 'neg', flip: true, text: '乘 −1 整條翻號，原本買進的變放空。' }
+      ]
+    }]
+  });
+
+  Teacher.slider('#slider', {
+    names: names, values: [1.0, -0.5, 0.3, 0.8, -1.2], index: 4, min: -20, max: 20, step: 0.1,
+    left: { title: '先 rank，再減平均、除以絕對值的和', ops: ['rank', 'neutralize', 'scale'] },
+    right: { title: '不 rank，直接減平均、除以絕對值的和', ops: ['neutralize', 'scale'] }
+  });
+
+  Teacher.candles('#candles', [
+    { name: '甲', o: 9, h: 11, l: 8, c: 10, note: '收在偏高' },
+    { name: '乙', o: 22, h: 23, l: 19, c: 20, note: '收在偏低' },
+    { name: '丙', o: 30.5, h: 32, l: 30, c: 31, note: '收在正中間' },
+    { name: '丁', o: 12.5, h: 15, l: 12, c: 14.8, note: '收在接近最高' },
+    { name: '戊', o: 51, h: 52, l: 45, c: 50, note: '收在偏高' }
+  ]);
+</script>
+</body>
+</html>
